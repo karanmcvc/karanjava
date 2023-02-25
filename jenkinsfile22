@@ -1,0 +1,54 @@
+pipeline{
+    agent any
+       tools {
+        maven "mymaven"
+       }
+    stages{
+        stage("git cheakout"){
+            steps{
+               git credentialsId: 'b2b50dc7-7948-4847-9bc9-25bc1bcfd9bd', url: 'https://github.com/maha4ntvc/mahalogin.git'
+            }
+           
+        }
+        stage("test"){
+            steps{
+               sh "mvn test" 
+            }
+           
+        }
+        stage("package"){
+            steps{
+               sh "mvn clean package"
+            }
+           
+        }
+        stage("deploy on test") {
+            steps{
+                deploy adapters: [tomcat9(credentialsId: '3c71d948-3ec3-402d-a28b-27511898a02c', path: '', url: 'http://100.25.171.195:8080')], contextPath: '/app', war: '**/*.war'
+        
+         }
+           
+        }
+        stage("deploy on prod"){
+            input { 
+                message "should we continue?"
+                ok "yes we should"
+                }
+             steps{
+               deploy adapters: [tomcat9(credentialsId: '3c71d948-3ec3-402d-a28b-27511898a02c', path: '', url: 'http://52.3.246.34:8080')], contextPath: '/app', war: '**/*.war'
+            }
+           
+        }
+    }
+    post{
+        always{
+            echo "always"
+        }
+        success{
+            echo "success"
+        }
+        failure{
+            echo "failed"
+        }
+    }
+}
